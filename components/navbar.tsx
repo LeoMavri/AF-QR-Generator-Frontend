@@ -1,3 +1,6 @@
+"use client";
+
+import React from "react";
 import {
   Navbar as NextUINavbar,
   NavbarContent,
@@ -18,11 +21,27 @@ import { siteConfig } from "@/config/site";
 import NextLink from "next/link";
 import clsx from "clsx";
 
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@nextui-org/react";
+
 import { ThemeSwitch } from "@/components/theme-switch";
 import {
-  TwitterIcon,
+  // TwitterIcon,
   GithubIcon,
-  DiscordIcon,
+  // DiscordIcon,
   HeartFilledIcon,
   SearchIcon,
 } from "@/components/icons";
@@ -30,26 +49,78 @@ import {
 import { Logo } from "@/components/icons";
 
 export const Navbar = () => {
-  const searchInput = (
-    <Input
-      aria-label="Search"
-      classNames={{
-        inputWrapper: "bg-default-100",
-        input: "text-sm",
-      }}
-      endContent={
-        <Kbd className="hidden lg:inline-block" keys={["command"]}>
-          K
-        </Kbd>
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const [getUrl, setUrl] = React.useState<string>("");
+  const [getCorrectionLevel, setCorrectionLevel] = React.useState<string>("");
+  const [getVersion, setVersion] = React.useState<number>(-1);
+  const [getMaskPattern, setMaskPattern] = React.useState<number>(-1);
+
+  const [getRequest, setRequest] = React.useState<{
+    error: boolean;
+    finished: boolean;
+    text: string;
+  }>({
+    error: false,
+    finished: false,
+    text: "The QR code has been successfully created.",
+  });
+
+  const postData = async () => {
+    try {
+      const response = await fetch("/api/qr", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pointsTo: getUrl,
+          errorCorrectionLevel: getCorrectionLevel || "low",
+          version: getVersion === -1 ? undefined : getVersion,
+          maskPattern: getMaskPattern === -1 ? undefined : getMaskPattern,
+        }),
+      });
+
+      const parsedInfo: {
+        error: boolean;
+      } = await response.json();
+
+      if (parsedInfo.error) {
+        alert(`Failed to create QR Code. Check console for more info.`);
+        console.warn(parsedInfo);
+      } else {
+        alert(`Successfully created QR Code!`);
       }
-      labelPlacement="outside"
-      placeholder="Search..."
-      startContent={
-        <SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
-      }
-      type="search"
-    />
-  );
+    } catch (err) {
+      console.log("Error: ", err);
+    }
+  };
+
+  const isInvalidURL = React.useMemo(() => {
+    if (getUrl === "") return true;
+    try {
+      new URL(getUrl);
+      return false;
+    } catch {
+      return true;
+    }
+  }, [getUrl]);
+
+  const isInvalidVersion = React.useMemo(() => {
+    if (getVersion === -1) return false;
+    if (isNaN(getVersion)) return true;
+    if (!getVersion) return false;
+    if (getVersion >= 1 && getVersion <= 40) return false;
+    return true;
+  }, [getVersion]);
+
+  const isInvalidMaskPattern = React.useMemo(() => {
+    if (getMaskPattern === -1) return false;
+    if (isNaN(getMaskPattern)) return true;
+    if (!getMaskPattern && getMaskPattern !== 0) return false;
+    if (getMaskPattern >= 0 && getMaskPattern <= 7) return false;
+    return true;
+  }, [getMaskPattern]);
 
   return (
     <NextUINavbar maxWidth="xl" position="sticky">
@@ -90,16 +161,138 @@ export const Navbar = () => {
         </NavbarItem>
 
         <NavbarItem className="hidden md:flex">
+          {/* ! This is the button I care about */}
           <Button
-            isExternal
-            as={Link}
             className="text-sm font-normal text-default-600 bg-default-100"
-            // href={siteConfig.links.sponsor}
             startContent={<HeartFilledIcon className="text-danger" />}
+            onClick={onOpen}
             variant="flat"
           >
             Create QR Code
           </Button>
+
+          <Modal
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+            isDismissable={false}
+          >
+            <ModalContent>
+              {(onClose) => (
+                <>
+                  <ModalHeader className="flex flex-col gap-1">
+                    Settings
+                  </ModalHeader>
+                  <ModalBody>
+                    {/* Input for URL */}
+                    <Input
+                      label="URL to encode"
+                      placeholder="https://example.com"
+                      // icon={<SearchIcon />}
+                      type="url"
+                      variant="bordered"
+                      isClearable
+                      description="Enter the URL you want to encode into a QR Code."
+                      isRequired
+                      width="100%"
+                      color={isInvalidURL ? "danger" : "success"}
+                      errorMessage={isInvalidURL && "Please enter a valid URL."}
+                      onValueChange={setUrl}
+                    />
+                    {/* Button for Correction Level (enum -> Dropdown) */}
+                    <Dropdown backdrop="blur">
+                      <DropdownTrigger>
+                        <Button variant="bordered">Set Correction Level</Button>
+                      </DropdownTrigger>
+                      <DropdownMenu
+                        aria-label="Static Actions"
+                        onAction={(key): void =>
+                          setCorrectionLevel(key.toString())
+                        }
+                      >
+                        <DropdownItem key="low" description="Up to 7% damage.">
+                          Low
+                        </DropdownItem>
+                        <DropdownItem
+                          key="medium"
+                          description="Up to 15% damage."
+                        >
+                          Medium
+                        </DropdownItem>
+                        <DropdownItem
+                          key="quartile"
+                          description="Up to 25% damage."
+                        >
+                          Quartile
+                        </DropdownItem>
+                        <DropdownItem
+                          key="high"
+                          description="Up to 30% damage."
+                        >
+                          High
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
+
+                    <div className="flex flex-col md:flex-row ">
+                      {/* Input for QR Code Version (1->40) */}
+                      <div className="md:w-1/2 md:pr-4">
+                        <Input
+                          label="QR Code Version"
+                          placeholder="1-40"
+                          type="number"
+                          variant="bordered"
+                          isClearable
+                          description="Leave empty to auto-detect."
+                          onValueChange={(value) => setVersion(Number(value))}
+                          color={isInvalidVersion ? "danger" : "success"}
+                          errorMessage={
+                            isInvalidVersion &&
+                            "Please enter a valid QR Code version."
+                          }
+                        />
+                      </div>
+                      {/* Input for Mask Pattern (0->7) */}
+                      <div className="md:w-1/2 md:ml-auto">
+                        <Input
+                          label="Mask Pattern"
+                          placeholder="0-7"
+                          type="number"
+                          variant="bordered"
+                          isClearable
+                          description="Leave empty to auto-detect."
+                          // width="100%"
+                          onValueChange={(value) =>
+                            setMaskPattern(Number(value))
+                          }
+                          color={isInvalidMaskPattern ? "danger" : "success"}
+                          errorMessage={
+                            isInvalidMaskPattern &&
+                            "Please enter a valid mask pattern."
+                          }
+                        />
+                      </div>{" "}
+                    </div>
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button color="danger" onPress={onClose}>
+                      Close
+                    </Button>
+
+                    {/* TODO: Some pop over stuff here ig */}
+                    <Button
+                      color="primary"
+                      onPress={postData}
+                      disabled={
+                        isInvalidURL || isInvalidVersion || isInvalidMaskPattern
+                      }
+                    >
+                      Create
+                    </Button>
+                  </ModalFooter>
+                </>
+              )}
+            </ModalContent>
+          </Modal>
         </NavbarItem>
       </NavbarContent>
 
@@ -110,29 +303,6 @@ export const Navbar = () => {
         <ThemeSwitch />
         <NavbarMenuToggle />
       </NavbarContent>
-
-      <NavbarMenu>
-        {searchInput}
-        <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
-                color={
-                  index === 2
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                    ? "danger"
-                    : "foreground"
-                }
-                href="#"
-                size="lg"
-              >
-                {item.label}
-              </Link>
-            </NavbarMenuItem>
-          ))}
-        </div>
-      </NavbarMenu>
     </NextUINavbar>
   );
 };
