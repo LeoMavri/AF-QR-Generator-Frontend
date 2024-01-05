@@ -4,14 +4,11 @@ import React from "react";
 import {
   Navbar as NextUINavbar,
   NavbarContent,
-  NavbarMenu,
   NavbarMenuToggle,
   NavbarBrand,
   NavbarItem,
-  NavbarMenuItem,
 } from "@nextui-org/navbar";
 import { Button } from "@nextui-org/button";
-import { Kbd } from "@nextui-org/kbd";
 import { Link } from "@nextui-org/link";
 import { Input } from "@nextui-org/input";
 
@@ -32,19 +29,10 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
 } from "@nextui-org/react";
 
 import { ThemeSwitch } from "@/components/theme-switch";
-import {
-  // TwitterIcon,
-  GithubIcon,
-  // DiscordIcon,
-  HeartFilledIcon,
-  SearchIcon,
-} from "@/components/icons";
+import { GithubIcon, HeartFilledIcon } from "@/components/icons";
 
 import { Logo } from "@/components/icons";
 
@@ -55,16 +43,6 @@ export const Navbar = () => {
   const [getCorrectionLevel, setCorrectionLevel] = React.useState<string>("");
   const [getVersion, setVersion] = React.useState<number>(-1);
   const [getMaskPattern, setMaskPattern] = React.useState<number>(-1);
-
-  const [getRequest, setRequest] = React.useState<{
-    error: boolean;
-    finished: boolean;
-    text: string;
-  }>({
-    error: false,
-    finished: false,
-    text: "The QR code has been successfully created.",
-  });
 
   const postData = async () => {
     try {
@@ -93,6 +71,9 @@ export const Navbar = () => {
       }
     } catch (err) {
       console.log("Error: ", err);
+    } finally {
+      await new Promise((resolve) => setTimeout(resolve, 2_500));
+      window.location.reload();
     }
   };
 
@@ -187,7 +168,6 @@ export const Navbar = () => {
                     <Input
                       label="URL to encode"
                       placeholder="https://example.com"
-                      // icon={<SearchIcon />}
                       type="url"
                       variant="bordered"
                       isClearable

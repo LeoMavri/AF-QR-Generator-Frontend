@@ -1,56 +1,144 @@
-// import { Link } from "@nextui-org/link";
-// import { Snippet } from "@nextui-org/snippet";
-// import { Code } from "@nextui-org/code";
-// import { button as buttonStyles } from "@nextui-org/theme";
-// import { siteConfig } from "@/config/site";
-// import { title, subtitle } from "@/components/primitives";
-// import { GithubIcon } from "@/components/icons";
+"use client";
+
+import React from "react";
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Image,
+  Link,
+  Skeleton,
+} from "@nextui-org/react";
 
 export default function Home() {
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [qrCodes, setQrCodes] = React.useState<
+    Array<{
+      urlExtension: string;
+      pointsTo: string;
+      timesScanned: number;
+      createdAt: string;
+      qrCodeImage: {
+        type: "Buffer";
+        data: number[];
+      };
+    }>
+  >([]);
+
+  React.useEffect(() => {
+    const fetchQrCodes = async () => {
+      try {
+        const response = await fetch("/api/qr");
+        const parsedInfo = (await response.json()) as {
+          error: boolean;
+          qrCodes: Array<{
+            urlExtension: string;
+            pointsTo: string;
+            timesScanned: number;
+            createdAt: string;
+            qrCodeImage: {
+              type: "Buffer";
+              data: number[];
+            };
+          }>;
+        };
+        const codes = parsedInfo.qrCodes.sort((a, b) => {
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        });
+
+        setQrCodes(codes);
+      } catch (err) {
+        console.log("Error: ", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchQrCodes();
+  }, []);
+
   return (
-    // <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-    //   <div className="inline-block max-w-lg text-center justify-center">
-    //     <h1 className={title()}>Make&nbsp;</h1>
-    //     <h1 className={title({ color: "violet" })}>beautiful&nbsp;</h1>
-    //     <br />
-    //     <h1 className={title()}>
-    //       websites regardless of your design experience.
-    //     </h1>
-    //     <h2 className={subtitle({ class: "mt-4" })}>
-    //       Beautiful, fast and modern React UI library.
-    //     </h2>
-    //   </div>
-
-    //   <div className="flex gap-3">
-    //     <Link
-    //       isExternal
-    //       href={siteConfig.links.docs}
-    //       className={buttonStyles({
-    //         color: "primary",
-    //         radius: "full",
-    //         variant: "shadow",
-    //       })}
-    //     >
-    //       Documentation
-    //     </Link>
-    //     <Link
-    //       isExternal
-    //       className={buttonStyles({ variant: "bordered", radius: "full" })}
-    //       href={siteConfig.links.github}
-    //     >
-    //       <GithubIcon size={20} />
-    //       GitHub
-    //     </Link>
-    //   </div>
-
-    //   <div className="mt-8">
-    //     <Snippet hideSymbol hideCopyButton variant="flat">
-    //       <span>
-    //         Get started by editing <Code color="primary">app/page.tsx</Code>
-    //       </span>
-    //     </Snippet>
-    //   </div>
-    // </section>
-    <></>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+        gridTemplateRows: "repeat(auto-fill, minmax(250px, 1fr))",
+        gap: "1rem",
+      }}
+    >
+      {isLoading ? (
+        <Card className="py-4">
+          <CardHeader className="pb-0 pt-2 px-4 flex-col items-start space-y-3">
+            <Skeleton isLoaded={!isLoading} className="rounded-lg">
+              <p className="text-tiny uppercase font-bold">
+                Points to{" "}
+                <Link href="https://google.com/" size="sm" color="secondary">
+                  google.com
+                </Link>
+              </p>
+            </Skeleton>
+            <Skeleton isLoaded={!isLoading} className="rounded-lg">
+              <p className="text-tiny uppercase font-bold">
+                Visited <b>1,234</b> times.
+              </p>
+            </Skeleton>
+            <Skeleton isLoaded={!isLoading} className="rounded-lg">
+              <p className="text-tiny uppercase font-bold">
+                Created on <b>4/20/69</b>{" "}
+              </p>
+            </Skeleton>
+          </CardHeader>
+          <CardBody className="overflow-visible py-2">
+            <Skeleton isLoaded={!isLoading} className="py-[4rem] rounded-lg">
+              <Image
+                alt="Card background"
+                className="object-cover rounded-xl"
+                width={270}
+              />
+            </Skeleton>
+          </CardBody>
+        </Card>
+      ) : (
+        qrCodes.map((qrCode, key) => (
+          <Card className="py-4" key={key}>
+            <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
+              <p className="text-tiny uppercase font-bold">
+                Points to:{" "}
+                <Link
+                  href={`https://api.diicot.cc/redirect/${qrCode.urlExtension}`}
+                  size="sm"
+                  color="secondary"
+                >
+                  {qrCode.pointsTo}
+                </Link>
+              </p>
+              <p className="text-tiny uppercase font-bold">
+                Visited <b>{qrCode.timesScanned}</b> times.
+              </p>
+              <p className="text-tiny uppercase font-bold">
+                Created on:{" "}
+                <b>
+                  {new Date(qrCode.createdAt).toLocaleDateString()} @{" "}
+                  {new Date(qrCode.createdAt).toLocaleTimeString()}
+                </b>{" "}
+              </p>
+            </CardHeader>
+            <CardBody className="overflow-visible py-2">
+              <Image
+                alt="Card background"
+                // center this:
+                className="object-cover rounded-xl"
+                src={`data:image/png;base64,${Buffer.from(
+                  qrCode.qrCodeImage.data
+                ).toString("base64")}`}
+                width={500}
+              />
+            </CardBody>
+          </Card>
+        ))
+      )}
+    </div>
   );
 }
