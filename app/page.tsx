@@ -42,11 +42,12 @@ export default function Home() {
             };
           }>;
         };
-        const codes = parsedInfo.qrCodes.sort((a, b) => {
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        });
+        const codes = parsedInfo.qrCodes;
+        // .sort((a, b) => {
+        //   return (
+        //     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        //   );
+        // });
 
         setQrCodes(codes);
       } catch (err) {
@@ -58,6 +59,8 @@ export default function Home() {
 
     fetchQrCodes();
   }, []);
+
+  // TODO: Pagination since it gets VERY laggy once we pass like 100 qr codes
 
   return (
     <div
