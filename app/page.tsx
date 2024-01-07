@@ -8,6 +8,8 @@ import {
   Image,
   Link,
   Skeleton,
+  Chip,
+  Tooltip,
 } from "@nextui-org/react";
 
 export default function Home() {
@@ -108,19 +110,21 @@ export default function Home() {
             <Card className="py-4" key={key}>
               <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
                 <p className="text-tiny uppercase font-bold">
-                  Points to:{" "}
-                  <Link
-                    href={`https://api.diicot.cc/redirect/${qrCode.urlExtension}`}
-                    size="sm"
-                    color="secondary"
+                  Points to:{"  "}
+                  <Tooltip
+                    content={
+                      <Link href={qrCode.pointsTo}>{qrCode.pointsTo}</Link>
+                    }
                   >
-                    {qrCode.pointsTo}
-                  </Link>
+                    <Chip color="secondary" size="sm" variant="dot">
+                      {new URL(qrCode.pointsTo).hostname}
+                    </Chip>
+                  </Tooltip>
                 </p>
-                <p className="text-tiny uppercase font-bold">
+                <p className="text-tiny uppercase font-bold py-2">
                   Visited <b>{qrCode.timesScanned}</b> times.
                 </p>
-                <p className="text-tiny uppercase font-bold">
+                <p className="text-tiny uppercase font-bold py-1">
                   Created on:{" "}
                   <b>
                     {new Date(qrCode.createdAt).toLocaleDateString()} @{" "}
@@ -130,8 +134,7 @@ export default function Home() {
               </CardHeader>
               <CardBody className="overflow-visible py-2">
                 <Image
-                  alt="Card background"
-                  // center this:
+                  alt="QR Code Image"
                   className="object-cover rounded-xl"
                   src={`data:image/png;base64,${Buffer.from(
                     qrCode.qrCodeImage.data
