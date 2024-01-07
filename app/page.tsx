@@ -109,7 +109,7 @@ export default function Home() {
         : qrCodes.map((qrCode, key) => (
             <Card className="py-4" key={key}>
               <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
-                <p className="text-tiny uppercase font-bold">
+                <div className="text-tiny uppercase font-bold">
                   Points to:{"  "}
                   <Tooltip
                     content={
@@ -120,17 +120,17 @@ export default function Home() {
                       {new URL(qrCode.pointsTo).hostname}
                     </Chip>
                   </Tooltip>
-                </p>
-                <p className="text-tiny uppercase font-bold py-2">
+                </div>
+                <div className="text-tiny uppercase font-bold py-2">
                   Visited <b>{qrCode.timesScanned}</b> times.
-                </p>
-                <p className="text-tiny uppercase font-bold py-1">
+                </div>
+                <div className="text-tiny uppercase font-bold py-1">
                   Created on:{" "}
                   <b>
                     {new Date(qrCode.createdAt).toLocaleDateString()} @{" "}
                     {new Date(qrCode.createdAt).toLocaleTimeString()}
                   </b>{" "}
-                </p>
+                </div>
               </CardHeader>
               <CardBody className="overflow-visible py-2">
                 <Image
