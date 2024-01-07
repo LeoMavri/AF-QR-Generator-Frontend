@@ -107,7 +107,7 @@ export const Navbar = () => {
       onClick={onOpen}
       variant="flat"
     >
-      Create QR Code
+      <span className="lg:block hidden">Create QR Code</span>
     </Button>
   );
 
@@ -282,9 +282,9 @@ export const Navbar = () => {
         <Link isExternal href={siteConfig.links.github} aria-label="Github">
           <GithubIcon className="text-default-500" />
         </Link>
-        {generateButton}
         <ThemeSwitch />
-        <NavbarMenuToggle />
+        {generateButton}
+        {/* <NavbarMenuToggle /> */}
       </NavbarContent>
     </NextUINavbar>
   );
