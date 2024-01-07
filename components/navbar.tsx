@@ -41,8 +41,8 @@ export const Navbar = () => {
 
   const [getUrl, setUrl] = React.useState<string>("");
   const [getCorrectionLevel, setCorrectionLevel] = React.useState<string>("");
-  const [getVersion, setVersion] = React.useState<number>(-1);
-  const [getMaskPattern, setMaskPattern] = React.useState<number>(-1);
+  const [getVersion, setVersion] = React.useState<number>();
+  const [getMaskPattern, setMaskPattern] = React.useState<number>();
 
   const postData = async () => {
     try {
@@ -79,26 +79,26 @@ export const Navbar = () => {
 
   const isInvalidURL = React.useMemo(() => {
     if (getUrl === "") return true;
-    try {
-      new URL(getUrl);
-      return false;
-    } catch {
-      return true;
-    }
+    const urlPattern = new RegExp(
+      "^(https?:\\/\\/)?" + // validate protocol
+        "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // validate domain name
+        "((\\d{1,3}\\.){3}\\d{1,3}))" + // validate OR ip (v4) address
+        "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // validate port and path
+        "(\\?[;&a-z\\d%_.~+=-]*)?" + // validate query string
+        "(\\#[-a-z\\d_]*)?$", // validate fragment locator
+      "i"
+    );
+    return !urlPattern.test(getUrl);
   }, [getUrl]);
 
   const isInvalidVersion = React.useMemo(() => {
-    if (getVersion === -1) return false;
-    if (isNaN(getVersion)) return true;
-    if (!getVersion) return false;
+    if (getVersion == undefined) return false;
     if (getVersion >= 1 && getVersion <= 40) return false;
     return true;
   }, [getVersion]);
 
   const isInvalidMaskPattern = React.useMemo(() => {
-    if (getMaskPattern === -1) return false;
-    if (isNaN(getMaskPattern)) return true;
-    if (!getMaskPattern && getMaskPattern !== 0) return false;
+    if (getMaskPattern == undefined) return false;
     if (getMaskPattern >= 0 && getMaskPattern <= 7) return false;
     return true;
   }, [getMaskPattern]);
