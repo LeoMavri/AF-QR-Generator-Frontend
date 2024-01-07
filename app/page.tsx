@@ -125,7 +125,7 @@ export default function Home() {
                   Visited <b>{qrCode.timesScanned}</b> times.
                 </div>
                 <div className="text-tiny uppercase font-bold py-1">
-                  Created on:{" "}
+                  Created on{" "}
                   <b>
                     {new Date(qrCode.createdAt).toLocaleDateString()} @{" "}
                     {new Date(qrCode.createdAt).toLocaleTimeString()}
