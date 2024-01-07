@@ -11,13 +11,10 @@ import {
 import { Button } from "@nextui-org/button";
 import { Link } from "@nextui-org/link";
 import { Input } from "@nextui-org/input";
-
 import { link as linkStyles } from "@nextui-org/theme";
-
 import { siteConfig } from "@/config/site";
 import NextLink from "next/link";
 import clsx from "clsx";
-
 import {
   Modal,
   ModalContent,
@@ -103,6 +100,17 @@ export const Navbar = () => {
     return true;
   }, [getMaskPattern]);
 
+  const generateButton = (
+    <Button
+      className="text-sm font-normal text-default-600 bg-default-100"
+      startContent={<HeartFilledIcon className="text-danger" />}
+      onClick={onOpen}
+      variant="flat"
+    >
+      Create QR Code
+    </Button>
+  );
+
   return (
     <NextUINavbar maxWidth="xl" position="sticky">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
@@ -143,14 +151,8 @@ export const Navbar = () => {
 
         <NavbarItem className="hidden md:flex">
           {/* ! This is the button I care about */}
-          <Button
-            className="text-sm font-normal text-default-600 bg-default-100"
-            startContent={<HeartFilledIcon className="text-danger" />}
-            onClick={onOpen}
-            variant="flat"
-          >
-            Create QR Code
-          </Button>
+
+          {generateButton}
 
           <Modal
             isOpen={isOpen}
@@ -280,6 +282,7 @@ export const Navbar = () => {
         <Link isExternal href={siteConfig.links.github} aria-label="Github">
           <GithubIcon className="text-default-500" />
         </Link>
+        {generateButton}
         <ThemeSwitch />
         <NavbarMenuToggle />
       </NavbarContent>
